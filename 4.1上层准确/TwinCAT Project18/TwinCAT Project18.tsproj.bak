@@ -3912,8 +3912,8 @@ Slave-Mode:
 					<CanOpen>
 						<CanQueue TxQueue="2" RxQueue="2" Flags="1">
 							<RxFilter EndCobId="536870911"/>
-							<Filter_Comments Key="0">manually added (acceptance filter)</Filter_Comments>
 							<Filter_Comments Key="170">manually added (code/mask)</Filter_Comments>
+							<Filter_Comments Key="0">manually added (acceptance filter)</Filter_Comments>
 							<Filter_Comments Key="44564480">manually added (acceptance filter)</Filter_Comments>
 							<Filter_Comments Key="536870657">manually added (rejection filter)</Filter_Comments>
 						</CanQueue>
