@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4022.6">
+  <DUT Name="TxMessage" Id="{3fd3b55b-37ed-41cd-9b1f-055c18c20b1a}">
+    <Declaration><![CDATA[TYPE TxMessage :
+STRUCT
+	CobId:				UDINT;
+	length:             UINT;
+	TxMessage:		ARRAY [0..7] OF USINT;
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

@@ -1,0 +1,25 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4022.6">
+  <DUT Name="Throw_para" Id="{42eb2c52-16b2-43d2-92f7-2f46a78e960f}">
+    <Declaration><![CDATA[TYPE Throw_para :
+STRUCT
+	EN:					BOOL;
+	ID:					UINT;
+	DIR: 				MC_Direction;
+	V: 					INT;
+	Distance: 			LREAL;
+	Stop: 				BOOL;
+	RST:				BOOL;
+	Pos_Tab:			ARRAY[0..255] OF LREAL;
+	Velo_Tab:			ARRAY[0..255] OF LREAL;
+	SetPosition:		BOOL;
+	ActualPosition:		LREAL;
+	Pos_ERR:			LREAL;
+	MoveAdditive:		BOOL;
+	MoveAbsolute:		BOOL;
+	Compensation:		REAL;
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

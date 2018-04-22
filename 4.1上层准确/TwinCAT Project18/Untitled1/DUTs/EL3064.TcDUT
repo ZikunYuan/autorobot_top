@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4022.6">
+  <DUT Name="EL3064" Id="{31b9a4b9-21f0-4bfa-920a-7abb4001db2c}">
+    <Declaration><![CDATA[TYPE EL3064 :
+STRUCT
+	CH1:				INT;
+	CH2:				INT;
+	CH3:				INT;
+	CH4:				INT;
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

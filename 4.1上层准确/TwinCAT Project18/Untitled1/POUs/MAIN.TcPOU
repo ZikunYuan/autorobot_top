@@ -1,0 +1,1090 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4022.6">
+  <POU Name="MAIN" Id="{62ca5a61-bc0c-45b9-b7eb-128bc6c1aae1}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM MAIN
+VAR
+(* nomal *)
+	MessageToSend:							TxMessage;
+	NumberOfMessagesToSend: 				UINT := 1;
+	i: 										INT :=0;
+	j: 										INT :=0;
+	MessageReceived:			     		ARRAY[1..2]  OF RxMessage;
+	Throw_ID:    							UINT := 16#AA;
+	Underpan_ID: 							UINT := 16#BB;
+	ELMO_EN:								UINT := 1;
+	ELMO_DIS_EN:							UINT := 2;
+	ELMO_STOP:								UINT := 3;
+	ELMO_DIS_STOP:							UINT := 4;
+	ELMO_RST:								UINT := 5;
+	ELMO_RST_flag_CLR:						UINT := 6;
+	MoveAdditive_mode:						UINT := 7;
+	USE_ParaTab:							UINT := 8;
+	Compensation:							INT := 9;
+	test_flag:								BOOL := FALSE;
+	
+(**  CAN	input	**)
+	TxCounter_input AT %I* :				UINT;    (*已发送计数，发送一次自动加1*)
+	RxCounter_input AT %I* :			   	UINT;     (*已接收计数，接收一次自动加1*)
+	NoOfRxMessages_input AT %I*:			UINT;
+	stRxMessage AT %I* :					ARRAY[1..2]  OF RxMessage;
+	NodeState AT %I* :						USINT;
+	DigFlag AT %I* :						BOOL;
+	EmergencyCounter AT %I*:				USINT;
+	
+(**  CAN	output	**)
+	TxCounter_output  AT %Q* :				UINT;  (*发送计数，数值加1，发送一次*)
+	NoOfRxMessages_output AT %Q*:			UINT;  (*一个周期发送的个数*)
+	stTxMessage AT %Q*:						TxMessage;
+	RxCounter_output AT %Q* :				UINT;
+	
+(**  EL3064	input	**)
+	EL3064_Value AT %I* :					EL3064;
+	EL3064_buf :							ARRAY[1..4, 1..10] OF INT;
+	EL3064_flag :							UINT;
+
+(**  Throw Motor	**)
+	AX_Throw : 								AXIS_REF;//抛射电机轴
+	Throw_para_now :						Throw_para;//抛射电机参数
+	vStart_Throw: 							BOOL;//抛射电机速度赋值标志位
+	vpStart_Throw:							BOOL;//抛射电机速度位置模式标志位
+	
+(**  Underpan Motor	**)
+	AX_Underpan1 : 							AXIS_REF;//底盘电机轴1
+	AX_Underpan2 : 							AXIS_REF;//底盘电机轴2
+	AX_Underpan3 : 							AXIS_REF;//底盘电机轴3
+	Underpan_para_now :						Underpan_para;//底盘电机参数
+	vStart_Underpan: 						BOOL;//底盘电机速度赋值标志位
+	
+	PorN : 									BOOL;//速度方向判断
+	
+	MCPower: 								MC_Power;
+
+	MCMoveVelocity_Underpan1: 				MC_MoveVelocity;
+	MCMoveVelocity_Underpan2: 				MC_MoveVelocity;
+	MCMoveVelocity_Underpan3: 				MC_MoveVelocity;
+
+	MCStop: 								MC_Stop;
+	MCMoveVelocity: 						MC_MoveVelocity;
+	MCReset: 								MC_Reset;
+	
+	
+	
+	MCMoveContinuousRelative: 				MC_MoveContinuousRelative;
+	Throw_MoveAdditive: 					MC_MoveAdditive;
+	
+	Throw_SetPosition: 						MC_SetPosition;
+	Throw_MoveAbsolute: 					MC_MoveAbsolute;
+	Throw_ReadActualPosition: MC_ReadActualPosition;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(*
+CAN通信指令------每条指令之间至少delay_ms(3);
+*)
+(*------------------------底盘电机CAN指令----------------------
+
+第0字节————控制位
+		写0: 速度赋值
+		写1：使能
+		写2：不使能
+		写3：停止
+		写4：不停止
+		写5：复位（清除错误）
+第1字节————电机1方向位,速度高7位
+第2字节————电机1速度低八位
+第3字节————电机2方向位,速度高7位
+第4字节————电机2速度低八位
+第5字节————电机3方向位,速度高7位
+第6字节————电机3速度低八位
+--其他不使用
+*)
+
+(*-----------------------抛射电机CAN指令-----------------------
+
+第0字节————速速方向---1--Positive 0--Negative
+第1字节————电机速度高8位---最大速度15900mm/s
+第2字节————电机速度低8位
+第3字节————控制位
+		写0: 速度模式赋值
+		写1：使能
+		写2：失能
+		写3：停止
+		写4：不停止
+		写5：复位（清除错误）
+		写6: 清除复位标志
+		写7: 速度位置模式赋值
+		写8: 使用参数表运动
+		写9: 运动位置补偿
+第4字节————7-相对运动位置赋值高8位---最大65535mm;
+			9-补偿位置高8位
+第5字节————7-相对运动位置赋值低8位---出轴 1转=2520mm;
+			9-补偿位置低8位
+第6字节————0-归零;其他-按照参数表运动
+--其他不使用
+*)
+
+(*-----------------------------log------------------------------
+2018.1.30--抛射功能基本实现,使用速度环
+2018.1.31--底盘电机位置环成功
+2018.2.4---修改RST函数,增加ELMO_RST_flag_CLR,抛射完全独立
+2018.3.4---底盘控制gg，速度环不可用
+2018.3.8---底盘不可用，上层抛射完全实现功能
+2018.3.25--加入抛射速度位置模式 MoveContinuousRelative
+2018.3.28--加入抛射绝对位置模式 MoveAbsolute,使用参数表
+2018.3.31--修改参数表，不清零
+*)
+
+(*//---------------------------test-------------------------------
+(*
+MCReset(
+			Axis:= AX_Underpan2, 
+			Execute:= TRUE, 
+			Done=> , 
+			Busy=> , 
+			Error=> , 
+			ErrorID=> );
+			*)
+MCPower(
+			Axis:= AX_Underpan1, 
+			Enable:= TRUE, 
+			Enable_Positive:= TRUE, 
+			Enable_Negative:= TRUE, 
+			Override:= , 
+			BufferMode:= , 
+			Options:= , 
+			Status=> , 
+			Busy=> , 
+			Active=> , 
+			Error=> , 
+			ErrorID=> );
+MCPower(
+			Axis:= AX_Underpan2, 
+			Enable:= TRUE, 
+			Enable_Positive:= TRUE, 
+			Enable_Negative:= TRUE, 
+			Override:= , 
+			BufferMode:= , 
+			Options:= , 
+			Status=> , 
+			Busy=> , 
+			Active=> , 
+			Error=> , 
+			ErrorID=> );
+MCPower(
+			Axis:= AX_Underpan3, 
+			Enable:= TRUE, 
+			Enable_Positive:= TRUE, 
+			Enable_Negative:= TRUE, 
+			Override:= , 
+			BufferMode:= , 
+			Options:= , 
+			Status=> , 
+			Busy=> , 
+			Active=> , 
+			Error=> , 
+			ErrorID=> );
+MCMoveVelocity_Underpan1(
+			Axis:= AX_Underpan1, 
+			Execute:= test_flag, 
+			Velocity:= 1000, 
+			Acceleration:= , 
+			Deceleration:= , 
+			Jerk:= , 
+			Direction:= MC_Positive_Direction, 
+			BufferMode:= , 
+			Options:= , 
+			InVelocity=> , 
+			Busy=> , 
+			Active=> , 
+			CommandAborted=> , 
+			Error=> , 
+			ErrorID=> );
+MCMoveVelocity_Underpan2(
+			Axis:= AX_Underpan2, 
+			Execute:= test_flag, 
+			Velocity:= 1000, 
+			Acceleration:= , 
+			Deceleration:= , 
+			Jerk:= , 
+			Direction:= MC_Positive_Direction, 
+			BufferMode:= , 
+			Options:= , 
+			InVelocity=> , 
+			Busy=> , 
+			Active=> , 
+			CommandAborted=> , 
+			Error=> , 
+			ErrorID=> );
+MCMoveVelocity_Underpan3(
+			Axis:= AX_Underpan3, 
+			Execute:= test_flag, 
+			Velocity:= 1000, 
+			Acceleration:= , 
+			Deceleration:= , 
+			Jerk:= , 
+			Direction:= MC_Positive_Direction, 
+			BufferMode:= , 
+			Options:= , 
+			InVelocity=> , 
+			Busy=> , 
+			Active=> , 
+			CommandAborted=> , 
+			Error=> , 
+			ErrorID=> );
+
+ *)
+//
+//----------------------------Para Init-----------------------------
+(*
+num     pos               velo
+0       0            
+1       2*2520+(+490)     5000
+2       2*2520+(-210)     2000
+3       0*2520+(-490)     2000
+4       0*2520+(+0)       2000 
+5       0*2520+(+2520)    7000
+6       0*2520+(-350)     2000
+7       1*2520+(-490)     2000
+8       1*2520+(+0)       2000
+9       1*2520+(+2520)    10000
+10      1*2520+(-350)     2000
+11      2*2520+(+490)     2000
+12      2*2520+(+0)       2000
+13      2*2520+(+2520)    7300
+14      2*2520+(-350)     1800
+15      3*2520+(-210)     2000
+16      4*2520+(-210)     2000
+17      5*2520+(-210)     2000
+18      6*2520+(-210)     2000
+19      3*2520+(+490)     2000
+20      4*2520+(+490)     2000
+21      5*2520+(+490)     2000
+22      6*2520+(+490)     2000
+23      3*2520+(+490)     2000
+24      4*2520+(+490)     2000
+25      5*2520+(+490)     2000
+26      6*2520+(+490)     2000
+27      3*2520+(+2520)    7300
+28      4*2520+(+2520)    7300
+29      5*2520+(+2520)    7300
+30      6*2520+(+2520)    7300
+31      3*2520+(-350)     1800
+32      4*2520+(-350)     1800
+33      5*2520+(-350)     1800
+34      6*2520+(-350)     1800
+*)
+Throw_para_now.Pos_Tab[0] := 0;//clear_pos
+Throw_para_now.Pos_Tab[1] := 2*2520+490;//color_to_gold
+//Throw_para_now.Pos_Tab[2] := 2*2520-210;//gold_swing
+Throw_para_now.Pos_Tab[3] := -430;//pare[0].capture
+Throw_para_now.Pos_Tab[4] := 0;//pare[0].prepare
+Throw_para_now.Pos_Tab[5] := 2520;//pare[0].shoot
+Throw_para_now.Pos_Tab[6] := -420;//pare[0].shoot_swing
+Throw_para_now.Pos_Tab[7] := 1*2520-430;//pare[1].capture
+Throw_para_now.Pos_Tab[8] := 2520;//pare[1].prepare
+Throw_para_now.Pos_Tab[9] := 1*2520+2520;//pare[1].shoot
+Throw_para_now.Pos_Tab[10] := 1*2520-420;//pare[1].shoot_swing
+Throw_para_now.Pos_Tab[11] := 2*2520+420;//pare[2].capture
+Throw_para_now.Pos_Tab[12] := 2*2520;//pare[2].prepare
+Throw_para_now.Pos_Tab[13] := 2*2520+2520;//pare[2].shoot
+Throw_para_now.Pos_Tab[14] := 2*2520-410;//pare[2].shoot_swing
+//Throw_para_now.Pos_Tab[15] := 3*2520-210;
+//Throw_para_now.Pos_Tab[16] := 4*2520-210;
+//Throw_para_now.Pos_Tab[17] := 5*2520-210;
+//Throw_para_now.Pos_Tab[18] := 6*2520-210;
+Throw_para_now.Pos_Tab[19] := 3*2520+450;
+Throw_para_now.Pos_Tab[20] := 4*2520+450;
+Throw_para_now.Pos_Tab[21] := 5*2520+450;
+Throw_para_now.Pos_Tab[22] := 6*2520+450;
+Throw_para_now.Pos_Tab[23] := 3*2520;
+Throw_para_now.Pos_Tab[24] := 4*2520;
+Throw_para_now.Pos_Tab[25] := 5*2520;
+Throw_para_now.Pos_Tab[26] := 6*2520;
+Throw_para_now.Pos_Tab[27] := 3*2520+(+2520);
+Throw_para_now.Pos_Tab[28] := 4*2520+(+2520);
+Throw_para_now.Pos_Tab[29] := 5*2520+(+2520);
+Throw_para_now.Pos_Tab[30] := 6*2520+(+2520);
+Throw_para_now.Pos_Tab[31] := 3*2520-420;
+Throw_para_now.Pos_Tab[32] := 4*2520-420;
+Throw_para_now.Pos_Tab[33] := 5*2520-420;
+Throw_para_now.Pos_Tab[34] := 6*2520-420;
+
+Throw_para_now.Velo_Tab[1] := 2000;//color_to_gold
+//Throw_para_now.Velo_Tab[2] := 2000;//gold_swing
+Throw_para_now.Velo_Tab[3] := 2000;//pare[0].capture
+Throw_para_now.Velo_Tab[4] := 2000;//pare[0].prepare
+Throw_para_now.Velo_Tab[5] := 7000;//pare[0].shoot
+Throw_para_now.Velo_Tab[6] := 2000;//pare[0].shoot_swing
+Throw_para_now.Velo_Tab[7] := 2000;//pare[1].capture
+Throw_para_now.Velo_Tab[8] := 2000;//pare[1].prepare
+Throw_para_now.Velo_Tab[9] := 8500;//pare[1].shoot
+Throw_para_now.Velo_Tab[10] := 2000;//pare[1].shoot_swing
+Throw_para_now.Velo_Tab[11] := 2000;//pare[2].capture
+Throw_para_now.Velo_Tab[12] := 2000;//pare[2].prepare
+Throw_para_now.Velo_Tab[13] := 8300;//pare[2].shoot
+Throw_para_now.Velo_Tab[14] := 1800;//pare[2].shoot_swing
+//Throw_para_now.Velo_Tab[15] := 2000;
+//Throw_para_now.Velo_Tab[16] := 2000;
+//Throw_para_now.Velo_Tab[17] := 2000;
+//Throw_para_now.Velo_Tab[18] := 2000;
+Throw_para_now.Velo_Tab[19] := 2000;
+Throw_para_now.Velo_Tab[20] := 2000;
+Throw_para_now.Velo_Tab[21] := 2000;
+Throw_para_now.Velo_Tab[22] := 2000;
+Throw_para_now.Velo_Tab[23] := 2000;
+Throw_para_now.Velo_Tab[24] := 2000;
+Throw_para_now.Velo_Tab[25] := 2000;
+Throw_para_now.Velo_Tab[26] := 2000;
+Throw_para_now.Velo_Tab[27] := 8300;
+Throw_para_now.Velo_Tab[28] := 8300;
+Throw_para_now.Velo_Tab[29] := 8300;
+Throw_para_now.Velo_Tab[30] := 8300;
+Throw_para_now.Velo_Tab[31] := 1800;
+Throw_para_now.Velo_Tab[32] := 1800;
+Throw_para_now.Velo_Tab[33] := 1800;
+Throw_para_now.Velo_Tab[34] := 1800;
+
+//----------------------------CAN ReceiveData-----------------------
+IF RxCounter_output <> RxCounter_input THEN
+MessageReceived[1] := stRxMessage [1];
+RxCounter_output := RxCounter_output+1;
+END_IF
+//CAN Data Analysis
+//--------------------------底盘电机指令----------------------------
+IF MessageReceived[1].CobId  = Underpan_ID THEN
+	//底盘电机速度控制
+	IF MessageReceived[1].RxMessage[0] = 0 THEN
+		Underpan_para_now.V1 := UINT_TO_INT((MessageReceived[1].RxMessage[1] AND 16#7F) * 256 + MessageReceived[1].RxMessage[2]);
+		Underpan_para_now.V2 := UINT_TO_INT((MessageReceived[1].RxMessage[3] AND 16#7F) * 256 + MessageReceived[1].RxMessage[4]);
+		Underpan_para_now.V3 := UINT_TO_INT((MessageReceived[1].RxMessage[5] AND 16#7F) * 256 + MessageReceived[1].RxMessage[6]);
+		PorN := USINT_TO_BOOL(MessageReceived[1].RxMessage[1] AND 16#80);
+		IF PorN THEN
+			Underpan_para_now.DIR1 := MC_Negative_Direction;
+			ELSE
+			Underpan_para_now.DIR1 := MC_Positive_Direction;
+		END_IF
+		PorN := USINT_TO_BOOL(MessageReceived[1].RxMessage[3] AND 16#80);
+		IF PorN THEN
+			Underpan_para_now.DIR2 := MC_Negative_Direction;
+			ELSE
+			Underpan_para_now.DIR2 := MC_Positive_Direction;
+		END_IF
+		PorN := USINT_TO_BOOL(MessageReceived[1].RxMessage[5] AND 16#80);
+		IF PorN THEN
+			Underpan_para_now.DIR3 := MC_Negative_Direction;
+			ELSE
+			Underpan_para_now.DIR3 := MC_Positive_Direction;
+		END_IF
+		//底盘速度赋值
+		MCMoveVelocity_Underpan1(
+			Axis:= AX_Underpan1, 
+			Execute:= vStart_Underpan, 
+			Velocity:= Underpan_para_now.V1, 
+			Acceleration:= , 
+			Deceleration:= , 
+			Jerk:= , 
+			Direction:= Underpan_para_now.DIR1, 
+			BufferMode:= , 
+			Options:= , 
+			InVelocity=> , 
+			Busy=> , 
+			Active=> , 
+			CommandAborted=> , 
+			Error=> , 
+			ErrorID=> );
+		MCMoveVelocity_Underpan2(
+			Axis:= AX_Underpan2, 
+			Execute:= vStart_Underpan, 
+			Velocity:= Underpan_para_now.V2, 
+			Acceleration:= , 
+			Deceleration:= , 
+			Jerk:= , 
+			Direction:= Underpan_para_now.DIR2, 
+			BufferMode:= , 
+			Options:= , 
+			InVelocity=> , 
+			Busy=> , 
+			Active=> , 
+			CommandAborted=> , 
+			Error=> , 
+			ErrorID=> );
+		MCMoveVelocity_Underpan3(
+			Axis:= AX_Underpan3, 
+			Execute:= vStart_Underpan, 
+			Velocity:= Underpan_para_now.V3, 
+			Acceleration:= , 
+			Deceleration:= , 
+			Jerk:= , 
+			Direction:= Underpan_para_now.DIR3, 
+			BufferMode:= , 
+			Options:= , 
+			InVelocity=> , 
+			Busy=> , 
+			Active=> , 
+			CommandAborted=> , 
+			Error=> , 
+			ErrorID=> );
+	END_IF
+	//底盘电机是否使能
+	IF (MessageReceived[1].RxMessage[0] = ELMO_EN)OR(MessageReceived[1].RxMessage[0] = ELMO_DIS_EN) THEN
+		IF MessageReceived[1].RxMessage[0] = ELMO_EN THEN
+			Underpan_para_now.EN := 1;
+		END_IF
+		IF MessageReceived[1].RxMessage[0] = ELMO_DIS_EN THEN
+			Underpan_para_now.EN := 0;
+		END_IF
+		//底盘电机使能控制
+		MCPower(
+			Axis:= AX_Underpan1, 
+			Enable:= Underpan_para_now.EN, 
+			Enable_Positive:= TRUE, 
+			Enable_Negative:= TRUE, 
+			Override:= , 
+			BufferMode:= , 
+			Options:= , 
+			Status=> , 
+			Busy=> , 
+			Active=> , 
+			Error=> , 
+			ErrorID=> );
+		MCPower(
+			Axis:= AX_Underpan2, 
+			Enable:= Underpan_para_now.EN, 
+			Enable_Positive:= TRUE, 
+			Enable_Negative:= TRUE, 
+			Override:= , 
+			BufferMode:= , 
+			Options:= , 
+			Status=> , 
+			Busy=> , 
+			Active=> , 
+			Error=> , 
+			ErrorID=> );
+		MCPower(
+			Axis:= AX_Underpan3, 
+			Enable:= Underpan_para_now.EN, 
+			Enable_Positive:= TRUE, 
+			Enable_Negative:= TRUE, 
+			Override:= , 
+			BufferMode:= , 
+			Options:= , 
+			Status=> , 
+			Busy=> , 
+			Active=> , 
+			Error=> , 
+			ErrorID=> );
+	
+	
+
+	
+	END_IF
+	//底盘电机是否停止
+	IF (MessageReceived[1].RxMessage[0] = ELMO_STOP)OR(MessageReceived[1].RxMessage[0] = ELMO_DIS_STOP) THEN
+		IF MessageReceived[1].RxMessage[0] = ELMO_STOP THEN
+			Underpan_para_now.Stop := 1;
+		END_IF
+		IF MessageReceived[1].RxMessage[0] = ELMO_DIS_STOP THEN
+			Underpan_para_now.Stop := 0;
+		END_IF
+		MCStop(
+			Axis:= AX_Underpan1, 
+			Execute:= Underpan_para_now.Stop, 
+			Deceleration:= , 
+			Jerk:= , 
+			Options:= , 
+			Done=> , 
+			Busy=> , 
+			Active=> , 
+			CommandAborted=> , 
+			Error=> , 
+			ErrorID=> );
+		MCStop(
+			Axis:= AX_Underpan2, 
+			Execute:= Underpan_para_now.Stop, 
+			Deceleration:= , 
+			Jerk:= , 
+			Options:= , 
+			Done=> , 
+			Busy=> , 
+			Active=> , 
+			CommandAborted=> , 
+			Error=> , 
+			ErrorID=> );
+		MCStop(
+			Axis:= AX_Underpan3, 
+			Execute:= Underpan_para_now.Stop, 
+			Deceleration:= , 
+			Jerk:= , 
+			Options:= , 
+			Done=> , 
+			Busy=> , 
+			Active=> , 
+			CommandAborted=> , 
+			Error=> , 
+			ErrorID=> );
+	END_IF
+	//底盘电机复位
+	IF (MessageReceived[1].RxMessage[0] = ELMO_RST)OR(MessageReceived[1].RxMessage[0] = ELMO_RST_flag_CLR) THEN
+		IF MessageReceived[1].RxMessage[0] = ELMO_RST THEN
+			Underpan_para_now.RST := 1;
+		END_IF
+		IF MessageReceived[1].RxMessage[0] = ELMO_RST_flag_CLR THEN
+			Underpan_para_now.RST := 0;
+		END_IF
+		MCReset(
+			Axis:= AX_Underpan1, 
+			Execute:= Underpan_para_now.RST, 
+			Done=> , 
+			Busy=> , 
+			Error=> , 
+			ErrorID=> );
+		MCReset(
+			Axis:= AX_Underpan2, 
+			Execute:= Underpan_para_now.RST, 
+			Done=> , 
+			Busy=> , 
+			Error=> , 
+			ErrorID=> );
+		MCReset(
+			Axis:= AX_Underpan3, 
+			Execute:= Underpan_para_now.RST, 
+			Done=> , 
+			Busy=> , 
+			Error=> , 
+			ErrorID=> );
+	END_IF
+END_IF
+
+//--------------------------抛射电机指令-----------------------------
+IF MessageReceived[1].CobId = Throw_ID THEN
+	//抛射电机速度模式
+	IF MessageReceived[1].RxMessage[3] = 0 THEN
+		//速度方向
+		PorN := USINT_TO_BOOL(MessageReceived[1].RxMessage[0]);
+		IF PorN THEN
+			Throw_para_now.DIR := MC_Positive_Direction;
+			ELSE 
+			Throw_para_now.DIR := MC_Negative_Direction;//MC_Positive_Direction
+		END_IF
+		//速度大小
+		Throw_para_now.V := UINT_TO_INT(MessageReceived[1].RxMessage[1] * 256 + MessageReceived[1].RxMessage[2]);
+		//速度模式
+		MCMoveVelocity(
+			Axis:= AX_Throw, 
+			Execute:= vStart_Throw, 
+			Velocity:= Throw_para_now.V, 
+			Acceleration:= , 
+			Deceleration:= , 
+			Jerk:= , 
+			Direction:= Throw_para_now.DIR, 
+			BufferMode:= , 
+			Options:= , 
+			InVelocity=> , 
+			Busy=> , 
+			Active=> , 
+			CommandAborted=> , 
+			Error=> , 
+			ErrorID=> );
+	END_IF
+	//抛射电机速度位置模式
+	IF MessageReceived[1].RxMessage[3] = MoveAdditive_mode THEN
+		//相对位置
+		Throw_para_now.Distance := UINT_TO_LREAL(MessageReceived[1].RxMessage[4] * 256 + MessageReceived[1].RxMessage[5]);
+		//运动方向
+		PorN := USINT_TO_BOOL(MessageReceived[1].RxMessage[0]);
+		IF PorN THEN
+			;
+			ELSE
+			Throw_para_now.Distance := -Throw_para_now.Distance;
+		END_IF
+		//速度大小
+		Throw_para_now.V := UINT_TO_INT(MessageReceived[1].RxMessage[1] * 256 + MessageReceived[1].RxMessage[2]);
+		//速度位置模式
+		Throw_MoveAdditive(
+			Axis:= AX_Throw, 
+			Execute:= vpStart_Throw, 
+			Distance:= Throw_para_now.Distance, 
+			Velocity:= Throw_para_now.V, 
+			Acceleration:= , 
+			Deceleration:= , 
+			Jerk:= , 
+			BufferMode:= , 
+			Options:= , 
+			Done=> , 
+			Busy=> , 
+			Active=> , 
+			CommandAborted=> , 
+			Error=> , 
+			ErrorID=> );
+		j := j + 1;
+		IF j = 1 THEN
+			vpStart_Throw := TRUE;
+		END_IF
+		IF j = 2 THEN
+			vpStart_Throw := FALSE;
+		END_IF
+		IF j = 3 THEN
+			j := 0;
+		END_IF
+		IF j = 4 THEN
+			MessageReceived[1].RxMessage[3] := 7;
+		END_IF
+	//
+	END_IF
+	IF MessageReceived[1].RxMessage[3] = USE_ParaTab THEN
+		IF MessageReceived[1].RxMessage[6] = 0 THEN
+			Throw_SetPosition(
+				Axis:= AX_Throw, 
+				Execute:= Throw_para_now.SetPosition, 
+				Position:= 0, 
+				Mode:= , 
+				Options:= , 
+				Done=> , 
+				Busy=> , 
+				Error=> , 
+				ErrorID=> );
+			Throw_para_now.SetPosition := TRUE;
+		ELSE
+			Throw_para_now.SetPosition := FALSE;
+			Throw_MoveAbsolute(
+				Axis:= AX_Throw, 
+				Execute:= Throw_para_now.MoveAbsolute, 
+				Position:= Throw_para_now.Pos_Tab[MessageReceived[1].RxMessage[6]] - Throw_para_now.Pos_ERR, 
+				Velocity:= Throw_para_now.Velo_Tab[MessageReceived[1].RxMessage[6]], 
+				Acceleration:= , 
+				Deceleration:= , 
+				Jerk:= , 
+				BufferMode:= , 
+				Options:= , 
+				Done=> , 
+				Busy=> , 
+				Active=> , 
+				CommandAborted=> , 
+				Error=> , 
+				ErrorID=> );
+		END_IF
+	END_IF
+	//抛射电机打滑补偿
+	IF MessageReceived[1].RxMessage[3] = Compensation THEN
+		Throw_para_now.Compensation := INT_TO_REAL(UINT_TO_INT(MessageReceived[1].RxMessage[4]*256 + MessageReceived[1].RxMessage[5])) * 2520.0 / 4000.0;
+		Throw_ReadActualPosition(
+			Axis:= AX_Throw, 
+			Enable:= TRUE, 
+			Valid=> , 
+			Busy=> , 
+			Error=> , 
+			ErrorID=> , 
+			Position=> Throw_para_now.ActualPosition);
+		Throw_para_now.Pos_ERR := Throw_para_now.Compensation - Throw_para_now.ActualPosition;
+		(*
+		Throw_SetPosition(
+				Axis:= AX_Throw, 
+				Execute:= Throw_para_now.SetPosition, 
+				Position:= Throw_para_now.Compensation, 
+				Mode:= , 
+				Options:= , 
+				Done=> , 
+				Busy=> , 
+				Error=> , 
+				ErrorID=> );
+		Throw_para_now.SetPosition := TRUE;
+		Throw_MoveAbsolute(
+			Axis:= AX_Throw, 
+			Execute:= Throw_para_now.MoveAbsolute, 
+			Position:= Throw_para_now.Compensation, 
+			Velocity:= 1000, 
+			Acceleration:= , 
+			Deceleration:= , 
+			Jerk:= , 
+			BufferMode:= , 
+			Options:= , 
+			Done=> , 
+			Busy=> , 
+			Active=> , 
+			CommandAborted=> , 
+			Error=> , 
+			ErrorID=> );
+		Throw_para_now.MoveAbsolute := TRUE;
+		*)
+	END_IF
+	//抛射电机是否使能
+	IF (MessageReceived[1].RxMessage[3] = ELMO_EN)OR(MessageReceived[1].RxMessage[3] = ELMO_DIS_EN) THEN
+		IF MessageReceived[1].RxMessage[3] = ELMO_EN THEN
+			Throw_para_now.EN := 1;
+		END_IF
+		IF MessageReceived[1].RxMessage[3] = ELMO_DIS_EN THEN
+			Throw_para_now.EN := 0;
+		END_IF
+		//抛射电机使能控制
+		MCPower(
+			Axis:= AX_Throw, 
+			Enable:= Throw_para_now.EN, 
+			Enable_Positive:= TRUE, 
+			Enable_Negative:= TRUE, 
+			Override:= , 
+			BufferMode:= , 
+			Options:= , 
+			Status=> , 
+			Busy=> , 
+			Active=> , 
+			Error=> , 
+			ErrorID=> );
+	END_IF
+	//抛射电机是否停止
+	IF (MessageReceived[1].RxMessage[3] = ELMO_DIS_STOP)OR(MessageReceived[1].RxMessage[3] = ELMO_STOP) THEN
+		IF MessageReceived[1].RxMessage[3] = ELMO_DIS_STOP THEN
+			Throw_para_now.Stop := 0;
+		END_IF
+		IF MessageReceived[1].RxMessage[3] = ELMO_STOP THEN
+			Throw_para_now.Stop := 1;
+		END_IF
+		//抛射电机停止控制
+		MCStop(
+			Axis:= AX_Throw, 
+			Execute:= Throw_para_now.Stop, 
+			Deceleration:= , 
+			Jerk:= , 
+			Options:= , 
+			Done=> , 
+			Busy=> , 
+			Active=> , 
+			CommandAborted=> , 
+			Error=> , 
+			ErrorID=> );
+	END_IF
+	//抛射电机复位
+	IF MessageReceived[1].RxMessage[3] = ELMO_RST THEN
+		Throw_para_now.RST := 1;
+		MCReset(
+			Axis:= AX_Throw, 
+			Execute:= Throw_para_now.RST, 
+			Done=> , 
+			Busy=> , 
+			Error=> , 
+			ErrorID=> );
+	END_IF
+	IF MessageReceived[1].RxMessage[3] = ELMO_RST_flag_CLR THEN
+		Throw_para_now.RST := 0;
+		MCReset(
+			Axis:= AX_Throw, 
+			Execute:= Throw_para_now.RST, 
+			Done=> , 
+			Busy=> , 
+			Error=> , 
+			ErrorID=> );
+	END_IF
+
+END_IF
+//---------------------------- finish--------------------------------------
+
+//-------------------------------读取EL3064并发送--------------------------------
+EL3064_flag := EL3064_flag + 1;
+IF EL3064_flag = 10 THEN
+	EL3064_buf[1,1] := EL3064_Value.CH1;
+	EL3064_buf[2,1] := EL3064_Value.CH1;
+	EL3064_buf[3,1] := EL3064_Value.CH1;
+	EL3064_buf[4,1] := EL3064_Value.CH1;
+	
+	//Send Messages
+	IF TxCounter_output = TxCounter_input THEN
+		
+		stTxMessage.CobId := 50;
+		stTxMessage.length:=8;
+		stTxMessage.TxMessage[0] := INT_TO_USINT(EL3064_buf[1,1] / 16#FF);
+		stTxMessage.TxMessage[1] := INT_TO_USINT(EL3064_buf[1,1]);
+		stTxMessage.TxMessage[2] := INT_TO_USINT(EL3064_buf[2,1] / 16#FF);
+		stTxMessage.TxMessage[3] := INT_TO_USINT(EL3064_buf[2,1]);
+		stTxMessage.TxMessage[4] := INT_TO_USINT(EL3064_buf[3,1] / 16#FF);
+		stTxMessage.TxMessage[5] := INT_TO_USINT(EL3064_buf[3,1]);
+		stTxMessage.TxMessage[6] := INT_TO_USINT(EL3064_buf[4,1] / 16#FF);
+		stTxMessage.TxMessage[7] := INT_TO_USINT(EL3064_buf[4,1]);
+		
+		NoOfRxMessages_output := NumberOfMessagesToSend;
+		TxCounter_output := TxCounter_output + 1;
+	END_IF
+	//Send Finish
+	EL3064_flag := 0;//clear flag
+END_IF
+//--------------------------------------finish-------------------------------------
+
+//标志位
+j := j + 1;
+
+IF Throw_para_now.Stop OR (NOT Throw_para_now.EN) THEN
+	;
+	ELSE
+	i := i + 1;
+	IF i = 1 THEN
+		vStart_Throw := FALSE;
+		Throw_para_now.MoveAbsolute := FALSE;
+		Throw_para_now.SetPosition := FALSE;
+	END_IF
+	IF i = 2 THEN
+		i := 0;
+		vStart_Throw := TRUE;
+		Throw_para_now.MoveAbsolute := TRUE;
+		Throw_para_now.SetPosition := TRUE;
+	END_IF
+END_IF
+//
+IF Underpan_para_now.Stop OR (NOT Underpan_para_now.EN) THEN
+	;
+	ELSE
+	i := i + 1;
+	IF i = 1 THEN
+		vStart_Underpan := FALSE;
+	END_IF
+	IF i = 2 THEN
+		i := 0;
+		vStart_Underpan := TRUE;
+	END_IF
+END_IF
+
+
+
+
+(*
+//CAN SendData
+IF j = 100 THEN
+	
+	IF TxCounter_output = TxCounter_input THEN
+	stTxMessage.CobId := 50;
+	stTxMessage.length:=8;
+	stTxMessage.TxMessage[0] := 100;
+	stTxMessage.TxMessage[1] := 1;
+	stTxMessage.TxMessage[2] := i;
+	stTxMessage.TxMessage[3] := i;
+	stTxMessage.TxMessage[4] := i;
+	stTxMessage.TxMessage[5] := i;
+	stTxMessage.TxMessage[6] := i;
+	stTxMessage.TxMessage[7] := i;
+	
+	NoOfRxMessages_output := NumberOfMessagesToSend;
+	TxCounter_output := TxCounter_output + 1;
+	END_IF
+
+	j := 0;
+END_IF
+*)
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="MAIN">
+      <LineId Id="1501" Count="0" />
+      <LineId Id="1503" Count="0" />
+      <LineId Id="1502" Count="0" />
+      <LineId Id="92" Count="0" />
+      <LineId Id="1461" Count="1" />
+      <LineId Id="1470" Count="4" />
+      <LineId Id="1469" Count="0" />
+      <LineId Id="1463" Count="5" />
+      <LineId Id="1496" Count="0" />
+      <LineId Id="1459" Count="0" />
+      <LineId Id="1498" Count="0" />
+      <LineId Id="1475" Count="0" />
+      <LineId Id="1499" Count="0" />
+      <LineId Id="1484" Count="2" />
+      <LineId Id="1490" Count="5" />
+      <LineId Id="1487" Count="0" />
+      <LineId Id="2469" Count="0" />
+      <LineId Id="2073" Count="0" />
+      <LineId Id="2467" Count="0" />
+      <LineId Id="2834" Count="0" />
+      <LineId Id="2074" Count="0" />
+      <LineId Id="2835" Count="0" />
+      <LineId Id="2075" Count="0" />
+      <LineId Id="2836" Count="0" />
+      <LineId Id="2466" Count="0" />
+      <LineId Id="1477" Count="0" />
+      <LineId Id="1476" Count="0" />
+      <LineId Id="2570" Count="0" />
+      <LineId Id="1500" Count="0" />
+      <LineId Id="2072" Count="0" />
+      <LineId Id="2071" Count="0" />
+      <LineId Id="1660" Count="1" />
+      <LineId Id="2066" Count="1" />
+      <LineId Id="2447" Count="0" />
+      <LineId Id="2754" Count="0" />
+      <LineId Id="1658" Count="0" />
+      <LineId Id="2068" Count="0" />
+      <LineId Id="1844" Count="0" />
+      <LineId Id="1917" Count="0" />
+      <LineId Id="1911" Count="5" />
+      <LineId Id="1905" Count="0" />
+      <LineId Id="1918" Count="0" />
+      <LineId Id="1771" Count="11" />
+      <LineId Id="1770" Count="0" />
+      <LineId Id="1786" Count="11" />
+      <LineId Id="1785" Count="0" />
+      <LineId Id="1816" Count="11" />
+      <LineId Id="1815" Count="0" />
+      <LineId Id="1977" Count="14" />
+      <LineId Id="1754" Count="0" />
+      <LineId Id="1800" Count="14" />
+      <LineId Id="1799" Count="0" />
+      <LineId Id="1993" Count="14" />
+      <LineId Id="1992" Count="0" />
+      <LineId Id="1753" Count="0" />
+      <LineId Id="1845" Count="0" />
+      <LineId Id="2069" Count="1" />
+      <LineId Id="2650" Count="0" />
+      <LineId Id="2759" Count="34" />
+      <LineId Id="2758" Count="0" />
+      <LineId Id="2755" Count="0" />
+      <LineId Id="2651" Count="14" />
+      <LineId Id="2794" Count="9" />
+      <LineId Id="2805" Count="8" />
+      <LineId Id="2804" Count="0" />
+      <LineId Id="2666" Count="14" />
+      <LineId Id="2814" Count="5" />
+      <LineId Id="2821" Count="12" />
+      <LineId Id="2820" Count="0" />
+      <LineId Id="2649" Count="0" />
+      <LineId Id="93" Count="5" />
+      <LineId Id="985" Count="0" />
+      <LineId Id="99" Count="0" />
+      <LineId Id="991" Count="0" />
+      <LineId Id="1105" Count="0" />
+      <LineId Id="1108" Count="68" />
+      <LineId Id="1106" Count="1" />
+      <LineId Id="1266" Count="0" />
+      <LineId Id="1177" Count="0" />
+      <LineId Id="1181" Count="0" />
+      <LineId Id="1267" Count="0" />
+      <LineId Id="1223" Count="2" />
+      <LineId Id="1265" Count="0" />
+      <LineId Id="1226" Count="38" />
+      <LineId Id="1178" Count="0" />
+      <LineId Id="1180" Count="0" />
+      <LineId Id="1179" Count="0" />
+      <LineId Id="537" Count="0" />
+      <LineId Id="1056" Count="0" />
+      <LineId Id="992" Count="0" />
+      <LineId Id="1268" Count="1" />
+      <LineId Id="1272" Count="4" />
+      <LineId Id="1270" Count="0" />
+      <LineId Id="1278" Count="10" />
+      <LineId Id="1277" Count="0" />
+      <LineId Id="1290" Count="10" />
+      <LineId Id="1289" Count="0" />
+      <LineId Id="1302" Count="10" />
+      <LineId Id="1301" Count="0" />
+      <LineId Id="1271" Count="0" />
+      <LineId Id="999" Count="0" />
+      <LineId Id="1629" Count="1" />
+      <LineId Id="1632" Count="1" />
+      <LineId Id="1635" Count="1" />
+      <LineId Id="1634" Count="0" />
+      <LineId Id="1638" Count="19" />
+      <LineId Id="1637" Count="0" />
+      <LineId Id="1631" Count="0" />
+      <LineId Id="116" Count="0" />
+      <LineId Id="986" Count="0" />
+      <LineId Id="117" Count="1" />
+      <LineId Id="1341" Count="0" />
+      <LineId Id="1313" Count="0" />
+      <LineId Id="2088" Count="0" />
+      <LineId Id="1317" Count="23" />
+      <LineId Id="1314" Count="1" />
+      <LineId Id="2076" Count="1" />
+      <LineId Id="2143" Count="0" />
+      <LineId Id="2145" Count="0" />
+      <LineId Id="2089" Count="0" />
+      <LineId Id="2080" Count="7" />
+      <LineId Id="2090" Count="0" />
+      <LineId Id="2366" Count="14" />
+      <LineId Id="2364" Count="0" />
+      <LineId Id="2221" Count="1" />
+      <LineId Id="2224" Count="4" />
+      <LineId Id="2233" Count="2" />
+      <LineId Id="2298" Count="2" />
+      <LineId Id="2214" Count="0" />
+      <LineId Id="2078" Count="0" />
+      <LineId Id="2394" Count="0" />
+      <LineId Id="2413" Count="0" />
+      <LineId Id="2417" Count="8" />
+      <LineId Id="2414" Count="0" />
+      <LineId Id="2426" Count="1" />
+      <LineId Id="2465" Count="0" />
+      <LineId Id="2450" Count="14" />
+      <LineId Id="2448" Count="0" />
+      <LineId Id="2415" Count="0" />
+      <LineId Id="2396" Count="0" />
+      <LineId Id="2843" Count="0" />
+      <LineId Id="2838" Count="1" />
+      <LineId Id="3099" Count="6" />
+      <LineId Id="3097" Count="0" />
+      <LineId Id="3106" Count="0" />
+      <LineId Id="2918" Count="0" />
+      <LineId Id="3095" Count="0" />
+      <LineId Id="2919" Count="8" />
+      <LineId Id="2841" Count="0" />
+      <LineId Id="3003" Count="14" />
+      <LineId Id="3002" Count="0" />
+      <LineId Id="3018" Count="0" />
+      <LineId Id="3096" Count="0" />
+      <LineId Id="2840" Count="0" />
+      <LineId Id="705" Count="0" />
+      <LineId Id="1342" Count="0" />
+      <LineId Id="1345" Count="1" />
+      <LineId Id="1361" Count="0" />
+      <LineId Id="1363" Count="1" />
+      <LineId Id="1343" Count="0" />
+      <LineId Id="1380" Count="12" />
+      <LineId Id="1379" Count="0" />
+      <LineId Id="1344" Count="0" />
+      <LineId Id="681" Count="0" />
+      <LineId Id="741" Count="0" />
+      <LineId Id="1395" Count="4" />
+      <LineId Id="1393" Count="0" />
+      <LineId Id="1425" Count="0" />
+      <LineId Id="1414" Count="10" />
+      <LineId Id="1413" Count="0" />
+      <LineId Id="1394" Count="0" />
+      <LineId Id="692" Count="0" />
+      <LineId Id="1005" Count="0" />
+      <LineId Id="1562" Count="0" />
+      <LineId Id="1009" Count="5" />
+      <LineId Id="1006" Count="1" />
+      <LineId Id="1564" Count="0" />
+      <LineId Id="1567" Count="6" />
+      <LineId Id="1565" Count="1" />
+      <LineId Id="691" Count="0" />
+      <LineId Id="125" Count="0" />
+      <LineId Id="2146" Count="0" />
+      <LineId Id="2540" Count="1" />
+      <LineId Id="2543" Count="0" />
+      <LineId Id="2149" Count="0" />
+      <LineId Id="2546" Count="0" />
+      <LineId Id="2548" Count="2" />
+      <LineId Id="2567" Count="0" />
+      <LineId Id="2554" Count="0" />
+      <LineId Id="2551" Count="0" />
+      <LineId Id="2571" Count="0" />
+      <LineId Id="2555" Count="11" />
+      <LineId Id="2552" Count="1" />
+      <LineId Id="2573" Count="1" />
+      <LineId Id="2547" Count="0" />
+      <LineId Id="2572" Count="0" />
+      <LineId Id="2575" Count="0" />
+      <LineId Id="927" Count="0" />
+      <LineId Id="2301" Count="1" />
+      <LineId Id="801" Count="5" />
+      <LineId Id="2445" Count="0" />
+      <LineId Id="3093" Count="0" />
+      <LineId Id="807" Count="3" />
+      <LineId Id="2446" Count="0" />
+      <LineId Id="3094" Count="0" />
+      <LineId Id="811" Count="1" />
+      <LineId Id="126" Count="0" />
+      <LineId Id="1427" Count="10" />
+      <LineId Id="1426" Count="0" />
+      <LineId Id="129" Count="0" />
+      <LineId Id="131" Count="0" />
+      <LineId Id="133" Count="0" />
+      <LineId Id="209" Count="0" />
+      <LineId Id="139" Count="23" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

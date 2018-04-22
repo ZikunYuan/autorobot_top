@@ -1,0 +1,179 @@
+#include "sys.h"
+#include "usart5.h"
+#include "stdarg.h"
+#include "stdio.h"
+#include "string.h"
+#include "stm32f4xx.h"
+#include "My_Flag.h"
+#include "usart.h"
+#include "main_assistant.h"
+
+//标志位（摄像头一直发但是只接收）
+u8 TZ1_Flag=0;
+u8 TZ2_Flag=0;
+u8 TZ3_Flag=0;
+u8 Capture_Color_Flag=0;
+u8 Color_To_Prepare_Flag=0;
+u8 PositionGolden_Flag=0;
+
+u8 UART5_TX_BUF[UART5_REC_LEN]; 		
+u8 UART5_RX_BUF[UART5_REC_LEN];     
+
+extern u8 ArriveTZ3_Flag;
+
+vu16 UART5_RX_STA=0;
+
+Flag Flag_UART5_RX = Not_Ready;
+
+void uart5_init(u32 bound)
+{
+    NVIC_InitTypeDef NVIC_InitStructure;
+    GPIO_InitTypeDef GPIO_InitStructure;
+    USART_InitTypeDef USART_InitStructure;
+
+    USART_DeInit(UART5);  
+
+    RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOC, ENABLE); 
+    RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOD, ENABLE);
+    RCC_APB1PeriphClockCmd(RCC_APB1Periph_UART5, ENABLE);
+
+
+    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_12; 
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;	
+    GPIO_InitStructure.GPIO_OType = GPIO_OType_PP; 
+    GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP; 
+    GPIO_Init(GPIOC, &GPIO_InitStructure); 
+
+
+    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_2; 
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;	
+    GPIO_InitStructure.GPIO_OType = GPIO_OType_PP; 
+    GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP; 
+    GPIO_Init(GPIOD, &GPIO_InitStructure); 
+
+    GPIO_PinAFConfig(GPIOC, GPIO_PinSource12, GPIO_AF_UART5); 
+    GPIO_PinAFConfig(GPIOD, GPIO_PinSource2, GPIO_AF_UART5); 
+
+    USART_InitStructure.USART_BaudRate = bound;
+    USART_InitStructure.USART_WordLength = USART_WordLength_8b;
+    USART_InitStructure.USART_StopBits = USART_StopBits_1;
+    USART_InitStructure.USART_Parity = USART_Parity_No;
+    USART_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
+    USART_InitStructure.USART_Mode = USART_Mode_Rx | USART_Mode_Tx;	
+    USART_Init(UART5, &USART_InitStructure); 
+
+    USART_ITConfig(UART5, USART_IT_RXNE, ENABLE);
+
+    USART_Cmd(UART5, ENABLE);                  
+
+    NVIC_InitStructure.NVIC_IRQChannel = UART5_IRQn;
+    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
+    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 2;		
+    NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;		
+    NVIC_Init(&NVIC_InitStructure);	
+
+    UART5_RX_STA=0;				
+}
+
+void u5_printf(char* fmt, ...)
+{
+    u16 i, j;
+    va_list ap;
+    va_start(ap, fmt);
+    vsprintf((char*)UART5_TX_BUF, fmt, ap);
+    va_end(ap);
+    i = strlen((const char*)UART5_TX_BUF);   
+    for (j = 0; j<i; j++)
+    {
+        while (USART_GetFlagStatus(UART5, USART_FLAG_TC) == RESET);
+        USART_SendData(UART5, (uint8_t)UART5_TX_BUF[j]);
+    }
+}
+
+static void u5_putchar(u8 ch)
+{
+    while ((UART5->SR & 0X40) == 0);
+    UART5->DR = (u8)ch;
+    //return ch;
+}
+
+void u5_putbuff(u8 *buff, u32 len)
+{
+    while (len--)
+    {
+        u5_putchar(*buff);
+        buff++;
+    }
+}
+
+u16  USART5_RX_STA=0;
+int Xa;
+u8 IDa;
+u8 STAa;
+u8 Symbol;
+u8 Direction;                     
+u8 Flag_go=0;                    
+u8 get_ball=0;                    
+u16 Z;
+u8 target_ID=3;
+
+void UART5_IRQHandler(void)               
+{
+	u8 Res;
+
+	if(USART_GetITStatus(UART5, USART_IT_RXNE) != RESET)  
+	{
+		Res =USART_ReceiveData(UART5);
+ 	 U3_printf("%d\r\n",Res);
+	 if(Res==Capture_Color&&Capture_Color_Flag==0)//???
+	 {
+		 Capture_Color_Flag=1;
+		 Capture_Color_Ball();                   
+		 Prepare_Movement(0);               
+		 USART_SendData(UART5,0xA);
+		 //u5_printf("%x\r\n",Capture_Color_Done);								 
+		// CAN2_SendMsg(Capture_Color_Done,UnderPan_ID);
+		 
+		 TZ1_Flag=0;//?????????
+		 TZ2_Flag=0;//?????????
+		// USART_ITConfig(UART5, USART_IT_RXNE, ENABLE);
+	 }
+	 else if(Res==PositionTZ1&&TZ1_Flag==0)//???????
+	 {
+		 TZ1_Flag=1;//????
+		 ThrowBall(PositionTZ1);//??
+		 USART_SendData(UART5,8);
+		 //u5_printf("%d\r\n",TZ1_Done);	
+		 //CAN2_SendMsg(TZ1_Done,UnderPan_ID);//???????
+		 Init_Movement(PositionTZ1);//??????
+		 Capture_Color_Flag=0;//????????
+		
+	 }
+	 else if(Res==PositionTZ2&&TZ2_Flag==0)//???????
+	 {
+		 TZ2_Flag=1;//????
+		 ThrowBall(PositionTZ2);//??
+		 USART_SendData(UART5,9);
+		// u5_printf("%d\r\n",TZ2_Done);	
+		 //CAN2_SendMsg(TZ2_Done,UnderPan_ID);//???????
+		 Init_Movement(PositionTZ2);//??????
+
+		 Capture_Color_Flag=0;//????????
+	 }
+	 else if(Res==PositionGolden&&PositionGolden_Flag==0)//??????
+	 {
+		 PositionGolden_Flag=1;								 
+		 Relay1=0;//????????
+		 From_2Prepare_L_To_Golden_Sart_L();//??????????????
+
+	 }
+	 else if(Res==PositionTZ3&&TZ3_Flag==0)//
+	 {
+		 ArriveTZ3_Flag=1;
+		 TZ3_Flag=1;//?????????????
+	 }				
+  } 
+} 
+

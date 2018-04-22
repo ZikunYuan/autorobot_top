@@ -1,0 +1,151 @@
+﻿  system_stm32f4xx.c
+c:\users\李彪\desktop\2017电设f4底层\nuedc_stm32f407vet6\nuedc_stm32f407vet6\core\core_cminstr.h(52): fatal error C1189: #error:  "Please use ARM Compiler Toolchain V4.0.677 or later!"
+  stm32f4xx_it.c
+c:\users\李彪\desktop\2017电设f4底层\nuedc_stm32f407vet6\nuedc_stm32f407vet6\core\core_cminstr.h(52): fatal error C1189: #error:  "Please use ARM Compiler Toolchain V4.0.677 or later!"
+  main.c
+c:\users\李彪\desktop\2017电设f4底层\nuedc_stm32f407vet6\nuedc_stm32f407vet6\core\core_cminstr.h(52): fatal error C1189: #error:  "Please use ARM Compiler Toolchain V4.0.677 or later!"
+  usart.c
+c:\users\李彪\desktop\2017电设f4底层\nuedc_stm32f407vet6\nuedc_stm32f407vet6\core\core_cminstr.h(52): fatal error C1189: #error:  "Please use ARM Compiler Toolchain V4.0.677 or later!"
+  sys.c
+c:\users\李彪\desktop\2017电设f4底层\nuedc_stm32f407vet6\nuedc_stm32f407vet6\core\core_cminstr.h(52): fatal error C1189: #error:  "Please use ARM Compiler Toolchain V4.0.677 or later!"
+  SysTick.c
+c:\users\李彪\desktop\2017电设f4底层\nuedc_stm32f407vet6\nuedc_stm32f407vet6\system\systick\systick.c : warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
+c:\users\李彪\desktop\2017电设f4底层\nuedc_stm32f407vet6\nuedc_stm32f407vet6\core\core_cminstr.h(52): fatal error C1189: #error:  "Please use ARM Compiler Toolchain V4.0.677 or later!"
+  delay.c
+c:\users\李彪\desktop\2017电设f4底层\nuedc_stm32f407vet6\nuedc_stm32f407vet6\core\core_cminstr.h(52): fatal error C1189: #error:  "Please use ARM Compiler Toolchain V4.0.677 or later!"
+  Time.c
+c:\users\李彪\desktop\2017电设f4底层\nuedc_stm32f407vet6\nuedc_stm32f407vet6\hardware\time\time.c : warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
+c:\users\李彪\desktop\2017电设f4底层\nuedc_stm32f407vet6\nuedc_stm32f407vet6\hardware\time\time.h : warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
+c:\users\李彪\desktop\2017电设f4底层\nuedc_stm32f407vet6\nuedc_stm32f407vet6\core\core_cminstr.h(52): fatal error C1189: #error:  "Please use ARM Compiler Toolchain V4.0.677 or later!"
+  show.c
+c:\users\李彪\desktop\2017电设f4底层\nuedc_stm32f407vet6\nuedc_stm32f407vet6\core\core_cminstr.h(52): fatal error C1189: #error:  "Please use ARM Compiler Toolchain V4.0.677 or later!"
+  Sensor_Param.c
+c:\users\李彪\desktop\2017电设f4底层\nuedc_stm32f407vet6\nuedc_stm32f407vet6\core\core_cminstr.h(52): fatal error C1189: #error:  "Please use ARM Compiler Toolchain V4.0.677 or later!"
+  oled.c
+c:\users\李彪\desktop\2017电设f4底层\nuedc_stm32f407vet6\nuedc_stm32f407vet6\core\core_cminstr.h(52): fatal error C1189: #error:  "Please use ARM Compiler Toolchain V4.0.677 or later!"
+  mymath.c
+c:\users\李彪\desktop\2017电设f4底层\nuedc_stm32f407vet6\nuedc_stm32f407vet6\hardware\my_math\mymath.c : warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
+c:\users\李彪\desktop\2017电设f4底层\nuedc_stm32f407vet6\nuedc_stm32f407vet6\core\core_cminstr.h(52): fatal error C1189: #error:  "Please use ARM Compiler Toolchain V4.0.677 or later!"
+  MPU6050.c
+c:\users\李彪\desktop\2017电设f4底层\nuedc_stm32f407vet6\nuedc_stm32f407vet6\core\core_cminstr.h(52): fatal error C1189: #error:  "Please use ARM Compiler Toolchain V4.0.677 or later!"
+  motor.c
+c:\users\李彪\desktop\2017电设f4底层\nuedc_stm32f407vet6\nuedc_stm32f407vet6\core\core_cminstr.h(52): fatal error C1189: #error:  "Please use ARM Compiler Toolchain V4.0.677 or later!"
+  led.c
+c:\users\李彪\desktop\2017电设f4底层\nuedc_stm32f407vet6\nuedc_stm32f407vet6\core\core_cminstr.h(52): fatal error C1189: #error:  "Please use ARM Compiler Toolchain V4.0.677 or later!"
+  key.c
+c:\users\李彪\desktop\2017电设f4底层\nuedc_stm32f407vet6\nuedc_stm32f407vet6\core\core_cminstr.h(52): fatal error C1189: #error:  "Please use ARM Compiler Toolchain V4.0.677 or later!"
+  myiic.c
+c:\users\李彪\desktop\2017电设f4底层\nuedc_stm32f407vet6\nuedc_stm32f407vet6\core\core_cminstr.h(52): fatal error C1189: #error:  "Please use ARM Compiler Toolchain V4.0.677 or later!"
+  HMC5883L.c
+c:\users\李彪\desktop\2017电设f4底层\nuedc_stm32f407vet6\nuedc_stm32f407vet6\core\core_cminstr.h(52): fatal error C1189: #error:  "Please use ARM Compiler Toolchain V4.0.677 or later!"
+  stmflash.c
+c:\users\李彪\desktop\2017电设f4底层\nuedc_stm32f407vet6\nuedc_stm32f407vet6\hardware\flash\stmflash.c : warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
+c:\users\李彪\desktop\2017电设f4底层\nuedc_stm32f407vet6\nuedc_stm32f407vet6\hardware\flash\stmflash.h : warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
+c:\users\李彪\desktop\2017电设f4底层\nuedc_stm32f407vet6\nuedc_stm32f407vet6\core\core_cminstr.h(52): fatal error C1189: #error:  "Please use ARM Compiler Toolchain V4.0.677 or later!"
+  filter.c
+c:\users\李彪\desktop\2017电设f4底层\nuedc_stm32f407vet6\nuedc_stm32f407vet6\hardware\filter\filter.c(6): warning C4305: “初始化”: 从“double”到“float”截断
+c:\users\李彪\desktop\2017电设f4底层\nuedc_stm32f407vet6\nuedc_stm32f407vet6\hardware\filter\filter.c(8): warning C4305: “初始化”: 从“double”到“float”截断
+c:\users\李彪\desktop\2017电设f4底层\nuedc_stm32f407vet6\nuedc_stm32f407vet6\hardware\filter\filter.c(9): warning C4305: “初始化”: 从“double”到“float”截断
+c:\users\李彪\desktop\2017电设f4底层\nuedc_stm32f407vet6\nuedc_stm32f407vet6\hardware\filter\filter.c(11): warning C4305: “初始化”: 从“double”到“float”截断
+c:\users\李彪\desktop\2017电设f4底层\nuedc_stm32f407vet6\nuedc_stm32f407vet6\hardware\filter\filter.c(107): warning C4244: “=”: 从“double”转换到“float”，可能丢失数据
+c:\users\李彪\desktop\2017电设f4底层\nuedc_stm32f407vet6\nuedc_stm32f407vet6\hardware\filter\filter.c(113): warning C4244: “=”: 从“double”转换到“float”，可能丢失数据
+  正在生成代码...
+  正在编译...
+  exti.c
+c:\users\李彪\desktop\2017电设f4底层\nuedc_stm32f407vet6\nuedc_stm32f407vet6\core\core_cminstr.h(52): fatal error C1189: #error:  "Please use ARM Compiler Toolchain V4.0.677 or later!"
+  encoder.c
+c:\users\李彪\desktop\2017电设f4底层\nuedc_stm32f407vet6\nuedc_stm32f407vet6\core\core_cminstr.h(52): fatal error C1189: #error:  "Please use ARM Compiler Toolchain V4.0.677 or later!"
+  inv_mpu_dmp_motion_driver.c
+c:\users\李彪\desktop\2017电设f4底层\nuedc_stm32f407vet6\nuedc_stm32f407vet6\core\core_cminstr.h(52): fatal error C1189: #error:  "Please use ARM Compiler Toolchain V4.0.677 or later!"
+  inv_mpu.c
+c:\users\李彪\desktop\2017电设f4底层\nuedc_stm32f407vet6\nuedc_stm32f407vet6\core\core_cminstr.h(52): fatal error C1189: #error:  "Please use ARM Compiler Toolchain V4.0.677 or later!"
+  beep.c
+c:\users\李彪\desktop\2017电设f4底层\nuedc_stm32f407vet6\nuedc_stm32f407vet6\core\core_cminstr.h(52): fatal error C1189: #error:  "Please use ARM Compiler Toolchain V4.0.677 or later!"
+  ANO_DT.c
+c:\users\李彪\desktop\2017电设f4底层\nuedc_stm32f407vet6\nuedc_stm32f407vet6\hardware\ano_dt\ano_dt.c : warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
+c:\users\李彪\desktop\2017电设f4底层\nuedc_stm32f407vet6\nuedc_stm32f407vet6\core\core_cminstr.h(52): fatal error C1189: #error:  "Please use ARM Compiler Toolchain V4.0.677 or later!"
+  stm32f4xx_wwdg.c
+c:\users\李彪\desktop\2017电设f4底层\nuedc_stm32f407vet6\nuedc_stm32f407vet6\core\core_cminstr.h(52): fatal error C1189: #error:  "Please use ARM Compiler Toolchain V4.0.677 or later!"
+  stm32f4xx_usart.c
+c:\users\李彪\desktop\2017电设f4底层\nuedc_stm32f407vet6\nuedc_stm32f407vet6\core\core_cminstr.h(52): fatal error C1189: #error:  "Please use ARM Compiler Toolchain V4.0.677 or later!"
+  stm32f4xx_tim.c
+c:\users\李彪\desktop\2017电设f4底层\nuedc_stm32f407vet6\nuedc_stm32f407vet6\core\core_cminstr.h(52): fatal error C1189: #error:  "Please use ARM Compiler Toolchain V4.0.677 or later!"
+  stm32f4xx_syscfg.c
+c:\users\李彪\desktop\2017电设f4底层\nuedc_stm32f407vet6\nuedc_stm32f407vet6\core\core_cminstr.h(52): fatal error C1189: #error:  "Please use ARM Compiler Toolchain V4.0.677 or later!"
+  stm32f4xx_spi.c
+c:\users\李彪\desktop\2017电设f4底层\nuedc_stm32f407vet6\nuedc_stm32f407vet6\core\core_cminstr.h(52): fatal error C1189: #error:  "Please use ARM Compiler Toolchain V4.0.677 or later!"
+  stm32f4xx_sdio.c
+c:\users\李彪\desktop\2017电设f4底层\nuedc_stm32f407vet6\nuedc_stm32f407vet6\core\core_cminstr.h(52): fatal error C1189: #error:  "Please use ARM Compiler Toolchain V4.0.677 or later!"
+  stm32f4xx_sai.c
+c:\users\李彪\desktop\2017电设f4底层\nuedc_stm32f407vet6\nuedc_stm32f407vet6\core\core_cminstr.h(52): fatal error C1189: #error:  "Please use ARM Compiler Toolchain V4.0.677 or later!"
+  stm32f4xx_rtc.c
+c:\users\李彪\desktop\2017电设f4底层\nuedc_stm32f407vet6\nuedc_stm32f407vet6\core\core_cminstr.h(52): fatal error C1189: #error:  "Please use ARM Compiler Toolchain V4.0.677 or later!"
+  stm32f4xx_rng.c
+c:\users\李彪\desktop\2017电设f4底层\nuedc_stm32f407vet6\nuedc_stm32f407vet6\core\core_cminstr.h(52): fatal error C1189: #error:  "Please use ARM Compiler Toolchain V4.0.677 or later!"
+  stm32f4xx_rcc.c
+c:\users\李彪\desktop\2017电设f4底层\nuedc_stm32f407vet6\nuedc_stm32f407vet6\core\core_cminstr.h(52): fatal error C1189: #error:  "Please use ARM Compiler Toolchain V4.0.677 or later!"
+  stm32f4xx_pwr.c
+c:\users\李彪\desktop\2017电设f4底层\nuedc_stm32f407vet6\nuedc_stm32f407vet6\core\core_cminstr.h(52): fatal error C1189: #error:  "Please use ARM Compiler Toolchain V4.0.677 or later!"
+  stm32f4xx_ltdc.c
+c:\users\李彪\desktop\2017电设f4底层\nuedc_stm32f407vet6\nuedc_stm32f407vet6\core\core_cminstr.h(52): fatal error C1189: #error:  "Please use ARM Compiler Toolchain V4.0.677 or later!"
+  stm32f4xx_iwdg.c
+c:\users\李彪\desktop\2017电设f4底层\nuedc_stm32f407vet6\nuedc_stm32f407vet6\core\core_cminstr.h(52): fatal error C1189: #error:  "Please use ARM Compiler Toolchain V4.0.677 or later!"
+  stm32f4xx_i2c.c
+c:\users\李彪\desktop\2017电设f4底层\nuedc_stm32f407vet6\nuedc_stm32f407vet6\core\core_cminstr.h(52): fatal error C1189: #error:  "Please use ARM Compiler Toolchain V4.0.677 or later!"
+  正在生成代码...
+  正在编译...
+  stm32f4xx_hash_sha1.c
+c:\users\李彪\desktop\2017电设f4底层\nuedc_stm32f407vet6\nuedc_stm32f407vet6\core\core_cminstr.h(52): fatal error C1189: #error:  "Please use ARM Compiler Toolchain V4.0.677 or later!"
+  stm32f4xx_hash_md5.c
+c:\users\李彪\desktop\2017电设f4底层\nuedc_stm32f407vet6\nuedc_stm32f407vet6\core\core_cminstr.h(52): fatal error C1189: #error:  "Please use ARM Compiler Toolchain V4.0.677 or later!"
+  stm32f4xx_hash.c
+c:\users\李彪\desktop\2017电设f4底层\nuedc_stm32f407vet6\nuedc_stm32f407vet6\core\core_cminstr.h(52): fatal error C1189: #error:  "Please use ARM Compiler Toolchain V4.0.677 or later!"
+  stm32f4xx_gpio.c
+c:\users\李彪\desktop\2017电设f4底层\nuedc_stm32f407vet6\nuedc_stm32f407vet6\core\core_cminstr.h(52): fatal error C1189: #error:  "Please use ARM Compiler Toolchain V4.0.677 or later!"
+  stm32f4xx_fsmc.c
+c:\users\李彪\desktop\2017电设f4底层\nuedc_stm32f407vet6\nuedc_stm32f407vet6\core\core_cminstr.h(52): fatal error C1189: #error:  "Please use ARM Compiler Toolchain V4.0.677 or later!"
+  stm32f4xx_fmc.c
+c:\users\李彪\desktop\2017电设f4底层\nuedc_stm32f407vet6\nuedc_stm32f407vet6\core\core_cminstr.h(52): fatal error C1189: #error:  "Please use ARM Compiler Toolchain V4.0.677 or later!"
+  stm32f4xx_flash_ramfunc.c
+c:\users\李彪\desktop\2017电设f4底层\nuedc_stm32f407vet6\nuedc_stm32f407vet6\core\core_cminstr.h(52): fatal error C1189: #error:  "Please use ARM Compiler Toolchain V4.0.677 or later!"
+  stm32f4xx_flash.c
+c:\users\李彪\desktop\2017电设f4底层\nuedc_stm32f407vet6\nuedc_stm32f407vet6\core\core_cminstr.h(52): fatal error C1189: #error:  "Please use ARM Compiler Toolchain V4.0.677 or later!"
+  stm32f4xx_exti.c
+c:\users\李彪\desktop\2017电设f4底层\nuedc_stm32f407vet6\nuedc_stm32f407vet6\core\core_cminstr.h(52): fatal error C1189: #error:  "Please use ARM Compiler Toolchain V4.0.677 or later!"
+  stm32f4xx_dma2d.c
+c:\users\李彪\desktop\2017电设f4底层\nuedc_stm32f407vet6\nuedc_stm32f407vet6\core\core_cminstr.h(52): fatal error C1189: #error:  "Please use ARM Compiler Toolchain V4.0.677 or later!"
+  stm32f4xx_dma.c
+c:\users\李彪\desktop\2017电设f4底层\nuedc_stm32f407vet6\nuedc_stm32f407vet6\core\core_cminstr.h(52): fatal error C1189: #error:  "Please use ARM Compiler Toolchain V4.0.677 or later!"
+  stm32f4xx_dcmi.c
+c:\users\李彪\desktop\2017电设f4底层\nuedc_stm32f407vet6\nuedc_stm32f407vet6\core\core_cminstr.h(52): fatal error C1189: #error:  "Please use ARM Compiler Toolchain V4.0.677 or later!"
+  stm32f4xx_dbgmcu.c
+c:\users\李彪\desktop\2017电设f4底层\nuedc_stm32f407vet6\nuedc_stm32f407vet6\core\core_cminstr.h(52): fatal error C1189: #error:  "Please use ARM Compiler Toolchain V4.0.677 or later!"
+  stm32f4xx_dac.c
+c:\users\李彪\desktop\2017电设f4底层\nuedc_stm32f407vet6\nuedc_stm32f407vet6\core\core_cminstr.h(52): fatal error C1189: #error:  "Please use ARM Compiler Toolchain V4.0.677 or later!"
+  stm32f4xx_cryp_tdes.c
+c:\users\李彪\desktop\2017电设f4底层\nuedc_stm32f407vet6\nuedc_stm32f407vet6\core\core_cminstr.h(52): fatal error C1189: #error:  "Please use ARM Compiler Toolchain V4.0.677 or later!"
+  stm32f4xx_cryp_des.c
+c:\users\李彪\desktop\2017电设f4底层\nuedc_stm32f407vet6\nuedc_stm32f407vet6\core\core_cminstr.h(52): fatal error C1189: #error:  "Please use ARM Compiler Toolchain V4.0.677 or later!"
+  stm32f4xx_cryp_aes.c
+c:\users\李彪\desktop\2017电设f4底层\nuedc_stm32f407vet6\nuedc_stm32f407vet6\core\core_cminstr.h(52): fatal error C1189: #error:  "Please use ARM Compiler Toolchain V4.0.677 or later!"
+  stm32f4xx_cryp.c
+c:\users\李彪\desktop\2017电设f4底层\nuedc_stm32f407vet6\nuedc_stm32f407vet6\core\core_cminstr.h(52): fatal error C1189: #error:  "Please use ARM Compiler Toolchain V4.0.677 or later!"
+  stm32f4xx_crc.c
+c:\users\李彪\desktop\2017电设f4底层\nuedc_stm32f407vet6\nuedc_stm32f407vet6\core\core_cminstr.h(52): fatal error C1189: #error:  "Please use ARM Compiler Toolchain V4.0.677 or later!"
+  stm32f4xx_can.c
+c:\users\李彪\desktop\2017电设f4底层\nuedc_stm32f407vet6\nuedc_stm32f407vet6\core\core_cminstr.h(52): fatal error C1189: #error:  "Please use ARM Compiler Toolchain V4.0.677 or later!"
+  正在生成代码...
+  正在编译...
+  stm32f4xx_adc.c
+c:\users\李彪\desktop\2017电设f4底层\nuedc_stm32f407vet6\nuedc_stm32f407vet6\core\core_cminstr.h(52): fatal error C1189: #error:  "Please use ARM Compiler Toolchain V4.0.677 or later!"
+  misc.c
+c:\users\李彪\desktop\2017电设f4底层\nuedc_stm32f407vet6\nuedc_stm32f407vet6\core\core_cminstr.h(52): fatal error C1189: #error:  "Please use ARM Compiler Toolchain V4.0.677 or later!"
+  Task_Loop.c
+c:\users\李彪\desktop\2017电设f4底层\nuedc_stm32f407vet6\nuedc_stm32f407vet6\control\task_loop\task_loop.c : warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
+c:\users\李彪\desktop\2017电设f4底层\nuedc_stm32f407vet6\nuedc_stm32f407vet6\core\core_cminstr.h(52): fatal error C1189: #error:  "Please use ARM Compiler Toolchain V4.0.677 or later!"
+  IMU.c
+c:\users\李彪\desktop\2017电设f4底层\nuedc_stm32f407vet6\nuedc_stm32f407vet6\control\imu\imu.c : warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
+c:\users\李彪\desktop\2017电设f4底层\nuedc_stm32f407vet6\nuedc_stm32f407vet6\core\core_cminstr.h(52): fatal error C1189: #error:  "Please use ARM Compiler Toolchain V4.0.677 or later!"
+  control.c
+c:\users\李彪\desktop\2017电设f4底层\nuedc_stm32f407vet6\nuedc_stm32f407vet6\core\core_cminstr.h(52): fatal error C1189: #error:  "Please use ARM Compiler Toolchain V4.0.677 or later!"
+  正在生成代码...

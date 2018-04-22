@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4022.6">
+  <DUT Name="Underpan_para" Id="{531bdd7d-5914-41ed-b13a-edbece90c685}">
+    <Declaration><![CDATA[TYPE Underpan_para :
+STRUCT
+	EN: BOOL;
+	ID: UINT;
+	DIR1: MC_Direction;
+	DIR2: MC_Direction;
+	DIR3: MC_Direction;
+	V1: INT;
+	V2: INT;
+	V3: INT;
+	Stop: BOOL;
+	RST: BOOL;
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>
