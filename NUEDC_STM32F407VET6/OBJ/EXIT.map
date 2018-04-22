@@ -2177,41 +2177,41 @@ Image component sizes
 
       Code (inc. data)   RO Data    RW Data    ZI Data      Debug   Object Name
 
-      4604        198          0          4        218       8636   ano_dt.o
-       172          6          0          8          0       2533   auto_math.o
-        64          4          0          0          0        580   beep.o
-       480         14          0          0         20       3143   can.o
-       260          8          0          4          0       1541   delay.o
-       756         20          0         12          0       2585   encoder.o
-       164         16          0          4          0       1075   exti.o
-       344         22          0          4          0       1604   key.o
-        72          6          0          0          0        583   led.o
-       576         60          0          0          0     304927   main.o
-      1908        350          0        132          0       3682   main_assistant.o
-       224         20          0          0          0       1921   misc.o
-       164         14          0          4          0       1072   relay.o
-      2856         60          0         34         16      10504   robomodule_can2.o
-        64         26        392          0       1536        876   startup_stm32f40_41xxx.o
-       764         38          0          8          0       2678   stepper.o
-      2544         38          0          0          0       8076   stm32f4xx_can.o
-       272         10          0          0          0       2367   stm32f4xx_exti.o
-      1684         28          0          0          0       9262   stm32f4xx_flash.o
-       660         44          0          0          0       4201   stm32f4xx_gpio.o
-        24          0          0          0          0       1178   stm32f4xx_it.o
-      1628         52          0         16          0      13036   stm32f4xx_rcc.o
-       148         12          0          0          0       1897   stm32f4xx_syscfg.o
-      3234         60          0          0          0      22404   stm32f4xx_tim.o
-      1108         34          0          0          0       7900   stm32f4xx_usart.o
-       364         48          0          0          0       2468   stmflash.o
-       528         46          0         20          0       1931   system_stm32f4xx.o
-       176         12          0          8          0      28396   systick.o
-       592         30          0          6         60       3516   time.o
-       212         10          0          6          0       3252   usart.o
-       392         20          0          2        400       2781   usart3.o
-       676         80          0         12        400       3094   usart5.o
+      4604        198          0          4        218       8564   ano_dt.o
+       172          6          0          8          0       2461   auto_math.o
+        64          4          0          0          0        556   beep.o
+       480         14          0          0         20       3071   can.o
+       260          8          0          4          0       1493   delay.o
+       756         20          0         12          0       2537   encoder.o
+       164         16          0          4          0       1027   exti.o
+       344         22          0          4          0       1556   key.o
+        72          6          0          0          0        559   led.o
+       576         60          0          0          0     304639   main.o
+      1908        350          0        132          0       3610   main_assistant.o
+       224         20          0          0          0       1873   misc.o
+       164         14          0          4          0       1024   relay.o
+      2856         60          0         34         16      10432   robomodule_can2.o
+        64         26        392          0       1536        864   startup_stm32f40_41xxx.o
+       764         38          0          8          0       2630   stepper.o
+      2544         38          0          0          0       8028   stm32f4xx_can.o
+       272         10          0          0          0       2319   stm32f4xx_exti.o
+      1684         28          0          0          0       9214   stm32f4xx_flash.o
+       660         44          0          0          0       4153   stm32f4xx_gpio.o
+        24          0          0          0          0       1154   stm32f4xx_it.o
+      1628         52          0         16          0      12964   stm32f4xx_rcc.o
+       148         12          0          0          0       1873   stm32f4xx_syscfg.o
+      3234         60          0          0          0      22356   stm32f4xx_tim.o
+      1108         34          0          0          0       7852   stm32f4xx_usart.o
+       364         48          0          0          0       2420   stmflash.o
+       528         46          0         20          0       1859   system_stm32f4xx.o
+       176         12          0          8          0      28300   systick.o
+       592         30          0          6         60       3420   time.o
+       212         10          0          6          0       3180   usart.o
+       392         20          0          2        400       2709   usart3.o
+       676         80          0         12        400       3022   usart5.o
 
     ----------------------------------------------------------------------
-     27716       1386        424        292       2652     463699   Object Totals
+     27716       1386        424        292       2652     461719   Object Totals
          0          0         32          0          0          0   (incl. Generated)
          2          0          0          8          2          0   (incl. Padding)
 
@@ -2328,8 +2328,8 @@ Image component sizes
 
       Code (inc. data)   RO Data    RW Data    ZI Data      Debug   
 
-     34996       1664        976        292       2748     459815   Grand Totals
-     34996       1664        976        292       2748     459815   ELF Image Totals
+     34996       1664        976        292       2748     457835   Grand Totals
+     34996       1664        976        292       2748     457835   ELF Image Totals
      34996       1664        976        292          0          0   ROM Totals
 
 ==============================================================================
