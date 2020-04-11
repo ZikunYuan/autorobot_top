@@ -22,6 +22,7 @@ VAR
 	Compensation:							INT := 9;
 	test_flag:								BOOL := FALSE;
 	
+	
 (**  CAN	input	**)
 	TxCounter_input AT %I* :				UINT;    (*已发送计数，发送一次自动加1*)
 	RxCounter_input AT %I* :			   	UINT;     (*已接收计数，接收一次自动加1*)
